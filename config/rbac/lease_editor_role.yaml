@@ -1,0 +1,24 @@
+# permissions for end users to edit leases.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: lease-editor-role
+rules:
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - leases
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - leases/status
+  verbs:
+  - get

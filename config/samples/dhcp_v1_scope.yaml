@@ -1,0 +1,11 @@
+apiVersion: dhcp.beryju.org/v1
+kind: Scope
+metadata:
+  name: scope-sample
+spec:
+  subnetCIDR: 10.120.22.0/24
+  leaseTemplate:
+    addressLeaseTime: 48h
+    optionSet:
+      name: optionset-sample
+  default: true

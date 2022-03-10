@@ -1,0 +1,24 @@
+# permissions for end users to edit optionsets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: optionset-editor-role
+rules:
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - optionsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - optionsets/status
+  verbs:
+  - get

@@ -1,0 +1,85 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - leases
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - leases/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - leases/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - optionsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - optionsets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - optionsets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - scopes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - scopes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - dhcp.beryju.org
+  resources:
+  - scopes/status
+  verbs:
+  - get
+  - patch
+  - update
