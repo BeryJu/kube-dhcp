@@ -69,17 +69,6 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 		return
 	}
 
-	// We need the option set to get the options
-	options := dhcpv1.OptionSet{}
-	err = r.Get(context.Background(), types.NamespacedName{
-		Namespace: lease.Namespace,
-		Name:      lease.Spec.OptionSet.Name,
-	}, &options)
-	if err != nil {
-		r.l.Error(err, "failed to get options set for lease reply")
-		return
-	}
-
 	rep, err := dhcpv4.NewReplyFromRequest(m)
 	if err != nil {
 		r.l.Error(err, "failed to create reply")
@@ -106,14 +95,26 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 
 	rep.YourIPAddr = net.ParseIP(lease.Spec.Address)
 
-	for _, opt := range options.Spec.Options {
-		r.l.V(1).Info("applying options from optionset", "option", opt.Tag)
-		for _, v := range opt.Values {
-			rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(opt.Tag), []byte(v)))
+	if lease.Spec.OptionSet.Name != "" {
+		// We need the option set to get the options
+		options := dhcpv1.OptionSet{}
+		err = r.Get(context.Background(), types.NamespacedName{
+			Namespace: lease.Namespace,
+			Name:      lease.Spec.OptionSet.Name,
+		}, &options)
+		if err != nil {
+			r.l.Error(err, "failed to get options set for lease reply")
+			return
+		}
+		for _, opt := range options.Spec.Options {
+			r.l.V(1).Info("applying options from optionset", "option", opt.Tag)
+			for _, v := range opt.Values {
+				rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(opt.Tag), []byte(v)))
+			}
 		}
 	}
 
-	r.l.V(1).Info(rep.Summary())
+	r.l.V(1).Info(rep.Summary(), "peer", peer.String())
 	if _, err := conn.WriteTo(rep.ToBytes(), peer); err != nil {
 		r.l.Error(err, "failed to write reply")
 	}
