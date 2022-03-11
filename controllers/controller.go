@@ -8,7 +8,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	dhcpv1 "beryju.org/kube-dhcp/api/v1"
 )
@@ -37,27 +36,26 @@ type ScopeReconciler struct {
 //+kubebuilder:rbac:groups=dhcp.beryju.org,resources=optionsets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=dhcp.beryju.org,resources=optionsets/finalizers,verbs=update
 func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	l := log.FromContext(ctx)
-	r.l = l
+	r.l = ctrl.Log
 
 	r.ensureRunning()
 
 	scopeList := &dhcpv1.ScopeList{}
 	err := r.List(context.Background(), scopeList)
 	if err != nil {
-		l.Error(err, "failed to list scopes")
+		r.l.Error(err, "failed to list scopes")
 		return ctrl.Result{}, err
 	}
-	l.V(1).Info("got all scopes", "scopeCount", len(scopeList.Items))
+	r.l.V(1).Info("got all scopes", "scopeCount", len(scopeList.Items))
 	r.scopes = scopeList.Items
 
 	optionSetList := &dhcpv1.OptionSetList{}
 	err = r.List(context.Background(), optionSetList)
 	if err != nil {
-		l.Error(err, "failed to list optionSets")
+		r.l.Error(err, "failed to list optionSets")
 		return ctrl.Result{}, err
 	}
-	l.V(1).Info("got all optionSets", "optionSetCount", len(optionSetList.Items))
+	r.l.V(1).Info("got all optionSets", "optionSetCount", len(optionSetList.Items))
 	r.optionSets = optionSetList.Items
 
 	return ctrl.Result{}, nil
