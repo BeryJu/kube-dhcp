@@ -37,7 +37,27 @@ func (r *ScopeReconciler) createLeaseFor(scope *dhcpv1.Scope, conn net.PacketCon
 	}
 }
 
-func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
+func (r *ScopeReconciler) findLease(m *dhcpv4.DHCPv4) *dhcpv1.Lease {
+	// check all leases to see if we already have this identifier somewhere
+	leases := &dhcpv1.LeaseList{}
+	err := r.List(context.Background(), leases)
+	if err != nil {
+		r.l.Error(err, "failed to list leases")
+		return nil
+	}
+	r.l.V(1).Info("cheking for existing lease")
+	var match *dhcpv1.Lease
+	for _, lease := range leases.Items {
+		if lease.Spec.Identifier == m.ClientHWAddr.String() {
+			r.l.V(1).Info("found matching lease", "lease", lease)
+			match = &lease
+			break
+		}
+	}
+	return match
+}
+
+func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4, modifyResponse func(*dhcpv4.DHCPv4) *dhcpv4.DHCPv4) {
 	// We need the scope to get the subnet bits
 	scope := dhcpv1.Scope{}
 	err := r.Get(context.Background(), types.NamespacedName{
@@ -65,7 +85,7 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 		r.l.Error(err, "failed to create reply")
 		return
 	}
-	rep.UpdateOption(dhcpv4.OptMessageType(dhcpv4.MessageTypeAck))
+	rep = modifyResponse(rep)
 
 	ipLeaseDuration, err := time.ParseDuration(lease.Spec.AddressLeaseTime)
 	if err != nil {
@@ -84,7 +104,7 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 	}
 	rep.UpdateOption(dhcpv4.OptSubnetMask(cidr.Mask))
 
-	rep.UpdateOption(dhcpv4.OptRequestedIPAddress(net.IP(lease.Spec.Address)))
+	rep.YourIPAddr = net.ParseIP(lease.Spec.Address)
 
 	for _, opt := range options.Spec.Options {
 		r.l.V(1).Info("applying options from optionset", "option", opt.Tag)
@@ -93,6 +113,7 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 		}
 	}
 
+	r.l.V(1).Info(rep.Summary())
 	if _, err := conn.WriteTo(rep.ToBytes(), peer); err != nil {
 		r.l.Error(err, "failed to write reply")
 	}

@@ -16,6 +16,7 @@ func (r *ScopeReconciler) ensureRunning() {
 		err := r.startServer()
 		if err != nil {
 			r.l.Error(err, "failed to start dhcp server")
+			panic(err)
 		}
 	}()
 }
