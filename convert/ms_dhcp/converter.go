@@ -95,6 +95,9 @@ func (c *Converter) convertScope(sc Scope) {
 	for _, res := range sc.Reservations.Reservation {
 		c.convertReservation(kscope, res)
 	}
+	for _, l := range sc.Leases.Lease {
+		c.convertLease(kscope, l)
+	}
 }
 
 func (c *Converter) convertReservation(ks dhcpv1.Scope, r Reservation) {
@@ -110,6 +113,30 @@ func (c *Converter) convertReservation(ks dhcpv1.Scope, r Reservation) {
 		Spec: dhcpv1.LeaseSpec{
 			Identifier: strings.ReplaceAll(r.ClientId, "-", ":"),
 			Address:    r.IPAddress,
+			Scope: corev1.LocalObjectReference{
+				Name: ks.Name,
+			},
+		},
+	}
+	c.writeFile(&lease)
+}
+
+func (c *Converter) convertLease(ks dhcpv1.Scope, l Lease) {
+	if l.HostName == "BAD_ADDRESS" {
+		return
+	}
+	name := slug.Make(fmt.Sprintf("%s-%s", ks.Name, l.HostName))
+	lease := dhcpv1.Lease{
+		ObjectMeta: v1.ObjectMeta{
+			Name: name,
+		},
+		TypeMeta: v1.TypeMeta{
+			Kind:       "Lease",
+			APIVersion: "dhcp.beryju.org/v1",
+		},
+		Spec: dhcpv1.LeaseSpec{
+			Identifier: strings.ReplaceAll(l.ClientId, "-", ":"),
+			Address:    l.IPAddress,
 			Scope: corev1.LocalObjectReference{
 				Name: ks.Name,
 			},

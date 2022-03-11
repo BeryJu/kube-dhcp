@@ -33,6 +33,26 @@ type Scope struct {
 		Text        string        `xml:",chardata"`
 		Reservation []Reservation `xml:"Reservation"`
 	} `xml:"Reservations"`
+	Leases struct {
+		Text  string  `xml:",chardata"`
+		Lease []Lease `xml:"Lease"`
+	} `xml:"Leases"`
+}
+
+type Lease struct {
+	Text            string `xml:",chardata"`
+	IPAddress       string `xml:"IPAddress"`
+	ScopeId         string `xml:"ScopeId"`
+	ClientId        string `xml:"ClientId"`
+	AddressState    string `xml:"AddressState"`
+	ClientType      string `xml:"ClientType"`
+	NapCapable      string `xml:"NapCapable"`
+	DnsRR           string `xml:"DnsRR"`
+	DnsRegistration string `xml:"DnsRegistration"`
+	LeaseExpiryTime string `xml:"LeaseExpiryTime"`
+	NapStatus       string `xml:"NapStatus"`
+	HostName        string `xml:"HostName"`
+	Description     string `xml:"Description"`
 }
 
 type Reservation struct {
