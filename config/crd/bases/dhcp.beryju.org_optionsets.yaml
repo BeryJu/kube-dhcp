@@ -76,11 +76,13 @@ spec:
                     tag:
                       format: int32
                       type: integer
-                    value:
-                      type: string
+                    values:
+                      items:
+                        type: string
+                      type: array
                   required:
                   - tag
-                  - value
+                  - values
                   type: object
                 type: array
             required:

@@ -14,8 +14,8 @@ type OptionSetSpec struct {
 }
 
 type Option struct {
-	Tag   int32  `json:"tag"`
-	Value string `json:"value"`
+	Tag    int32    `json:"tag"`
+	Values []string `json:"values"`
 
 	ConfigMapKeyRef *corev1.ConfigMapKeySelector `json:"configMapKeyRef,omitempty" protobuf:"bytes,3,opt,name=configMapKeyRef"`
 	// Selects a key of a secret in the pod's namespace

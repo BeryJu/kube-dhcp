@@ -39,8 +39,12 @@ func (r *ScopeReconciler) matchScope(scope dhcpv1.Scope, conn net.PacketConn, pe
 	// Check cidrs
 	_, cidr, err := net.ParseCIDR(scope.Spec.SubnetCIDR)
 	if err != nil {
-		// TODO: write into status
 		r.l.Error(err, "failed to parse cidr", "scope", scope.ObjectMeta.Name)
+		scope.Status.State = err.Error()
+		err = r.Update(context.Background(), &scope)
+		if err != nil {
+			r.l.Error(err, "failed to write status into scope")
+		}
 	}
 	if cidr.Contains(m.ClientIPAddr) {
 		r.l.V(1).Info("Scope CIDR matches client addr", "scope", scope.ObjectMeta.Name, "ip", m.ClientIPAddr.String())
@@ -53,8 +57,12 @@ func (r *ScopeReconciler) nextFreeAddress(scope dhcpv1.Scope) *net.IP {
 	// Check cidrs
 	initialIp, cidr, err := net.ParseCIDR(scope.Spec.SubnetCIDR)
 	if err != nil {
-		// TODO: write into status
 		r.l.Error(err, "failed to parse cidr", "scope", scope.ObjectMeta.Name)
+		scope.Status.State = err.Error()
+		err = r.Update(context.Background(), &scope)
+		if err != nil {
+			r.l.Error(err, "failed to write status into scope")
+		}
 		return nil
 	}
 	// get all leases to check

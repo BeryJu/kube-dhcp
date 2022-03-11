@@ -27,7 +27,6 @@ func (r *ScopeReconciler) createLeaseFor(scope *dhcpv1.Scope, conn net.PacketCon
 	}
 	spec.Identifier = m.ClientHWAddr.String()
 	spec.Address = r.nextFreeAddress(*scope).String()
-	// spec.OptionSet = scope.Spec.OptionSet
 	status := dhcpv1.LeaseStatus{
 		LastRequest: time.Now().Format(time.RFC3339),
 	}
@@ -89,7 +88,9 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 
 	for _, opt := range options.Spec.Options {
 		r.l.V(1).Info("applying options from optionset", "option", opt.Tag)
-		rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(opt.Tag), []byte(opt.Value)))
+		for _, v := range opt.Values {
+			rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(opt.Tag), []byte(v)))
+		}
 	}
 
 	if _, err := conn.WriteTo(rep.ToBytes(), peer); err != nil {

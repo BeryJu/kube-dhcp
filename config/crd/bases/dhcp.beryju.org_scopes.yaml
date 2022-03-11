@@ -40,6 +40,7 @@ spec:
               leaseTemplate:
                 properties:
                   addressLeaseTime:
+                    description: 'TODO: add cleanup'
                     type: string
                   optionSet:
                     description: LocalObjectReference contains enough information
