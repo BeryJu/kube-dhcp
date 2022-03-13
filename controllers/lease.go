@@ -2,120 +2,79 @@ package controllers
 
 import (
 	"context"
-	"net"
+	"sync"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
-
 	dhcpv1 "beryju.org/kube-dhcp/api/v1"
-	"github.com/insomniacslk/dhcp/dhcpv4"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (r *ScopeReconciler) createLeaseFor(scope *dhcpv1.Scope, conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) *dhcpv1.Lease {
-	meta := metav1.ObjectMeta{
-		// TODO: Customisable name
-		Name:      m.HostName(),
-		Namespace: scope.Namespace,
-	}
-	spec := &dhcpv1.LeaseSpec{
-		LeaseCommonSpec: *scope.Spec.DeepCopy().LeaseTemplate,
-		Scope: corev1.LocalObjectReference{
-			Name: scope.Name,
-		},
-	}
-	spec.Identifier = m.ClientHWAddr.String()
-	spec.Address = r.nextFreeAddress(*scope).String()
-	status := dhcpv1.LeaseStatus{
-		LastRequest: time.Now().Format(time.RFC3339),
-	}
-	return &dhcpv1.Lease{
-		ObjectMeta: meta,
-		Spec:       *spec,
-		Status:     status,
-	}
+// LeaseReconciler reconciles a Lease object
+type LeaseReconciler struct {
+	client.Client
+	Scheme *runtime.Scheme
+
+	l logr.Logger
+
+	queue      map[types.UID]bool
+	queueMutex sync.Mutex
 }
 
-func (r *ScopeReconciler) findLease(m *dhcpv4.DHCPv4) *dhcpv1.Lease {
-	// check all leases to see if we already have this identifier somewhere
+//+kubebuilder:rbac:groups=dhcp.beryju.org,resources=leases,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=dhcp.beryju.org,resources=leases/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=dhcp.beryju.org,resources=leases/finalizers,verbs=update
+func (l *LeaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	l.l = ctrl.Log
+
 	leases := &dhcpv1.LeaseList{}
-	err := r.List(context.Background(), leases)
+	err := l.List(context.Background(), leases)
 	if err != nil {
-		r.l.Error(err, "failed to list leases")
-		return nil
+		l.l.Error(err, "failed to list optionSets")
+		return ctrl.Result{}, err
 	}
-	r.l.V(1).Info("cheking for existing lease")
-	var match *dhcpv1.Lease
+
+	// this approach probably leaks goroutines all over the place,
+	// since waiting ones are never cancelled/removed
 	for _, lease := range leases.Items {
-		if lease.Spec.Identifier == m.ClientHWAddr.String() {
-			r.l.V(1).Info("found matching lease", "lease", lease)
-			match = &lease
-			break
+		_, qs := l.queue[lease.UID]
+		if !qs {
+			go l.checkExpired(lease)
 		}
 	}
-	return match
+
+	return ctrl.Result{}, nil
 }
 
-func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4, modifyResponse func(*dhcpv4.DHCPv4) *dhcpv4.DHCPv4) {
-	// We need the scope to get the subnet bits
-	scope := dhcpv1.Scope{}
-	err := r.Get(context.Background(), types.NamespacedName{
-		Namespace: lease.Namespace,
-		Name:      lease.Spec.Scope.Name,
-	}, &scope)
+func (l *LeaseReconciler) checkExpired(lease dhcpv1.Lease) {
+	l.queueMutex.Lock()
+	l.queue[lease.UID] = true
+	l.queueMutex.Unlock()
+	created := lease.CreationTimestamp.Time
+	dur, err := time.ParseDuration(lease.Spec.AddressLeaseTime)
 	if err != nil {
-		r.l.Error(err, "failed to get scope for lease reply")
+		l.l.Error(err, "failed to parse duration in lease", "lease", lease.Name)
 		return
 	}
-
-	rep, err := dhcpv4.NewReplyFromRequest(m)
-	if err != nil {
-		r.l.Error(err, "failed to create reply")
-		return
-	}
-	rep = modifyResponse(rep)
-
-	ipLeaseDuration, err := time.ParseDuration(lease.Spec.AddressLeaseTime)
-	if err != nil {
-		r.l.Error(err, "failed to parse address lease duration, defaulting", "default", "24h")
-		ipLeaseDuration = time.Hour * 24
-	}
-	rep.UpdateOption(dhcpv4.OptIPAddressLeaseTime(ipLeaseDuration))
-
-	// set subnet
-	_, cidr, err := net.ParseCIDR(scope.Spec.SubnetCIDR)
-	if err != nil {
-		r.l.Error(err, "failed to parse scope cidr, defaulting", "default", "255.255.255.0")
-		cidr = &net.IPNet{
-			Mask: net.CIDRMask(24, 8),
-		}
-	}
-	rep.UpdateOption(dhcpv4.OptSubnetMask(cidr.Mask))
-
-	rep.YourIPAddr = net.ParseIP(lease.Spec.Address)
-
-	if lease.Spec.OptionSet.Name != "" {
-		// We need the option set to get the options
-		options := dhcpv1.OptionSet{}
-		err = r.Get(context.Background(), types.NamespacedName{
-			Namespace: lease.Namespace,
-			Name:      lease.Spec.OptionSet.Name,
-		}, &options)
+	delta := time.Until(created.Add(dur))
+	if delta < 0 {
+		err := l.Delete(context.Background(), &lease)
 		if err != nil {
-			r.l.Error(err, "failed to get options set for lease reply")
-			return
+			l.l.Error(err, "failed to delete lease", "lease", lease.Name)
 		}
-		for _, opt := range options.Spec.Options {
-			r.l.V(1).Info("applying options from optionset", "option", opt.Tag)
-			for _, v := range opt.Values {
-				rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(opt.Tag), []byte(v)))
-			}
-		}
+	} else {
+		time.Sleep(delta)
+		l.checkExpired(lease)
+		return
 	}
+}
 
-	r.l.V(1).Info(rep.Summary(), "peer", peer.String())
-	if _, err := conn.WriteTo(rep.ToBytes(), peer); err != nil {
-		r.l.Error(err, "failed to write reply")
-	}
+// SetupWithManager sets up the controller with the Manager.
+func (l *LeaseReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&dhcpv1.Lease{}).
+		Complete(l)
 }

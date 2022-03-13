@@ -48,7 +48,6 @@ spec:
               address:
                 type: string
               addressLeaseTime:
-                description: 'TODO: add cleanup'
                 type: string
               identifier:
                 type: string

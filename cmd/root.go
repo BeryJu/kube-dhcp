@@ -18,6 +18,7 @@ import (
 
 	dhcpv1 "beryju.org/kube-dhcp/api/v1"
 	"beryju.org/kube-dhcp/controllers"
+	"beryju.org/kube-dhcp/controllers/scope"
 
 	//+kubebuilder:scaffold:imports
 	"fmt"
@@ -58,11 +59,18 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if err = (&controllers.ScopeReconciler{
+		if err = (&scope.ScopeReconciler{
 			Client: mgr.GetClient(),
 			Scheme: mgr.GetScheme(),
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Scope")
+			os.Exit(1)
+		}
+		if err = (&controllers.LeaseReconciler{
+			Client: mgr.GetClient(),
+			Scheme: mgr.GetScheme(),
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "Lease")
 			os.Exit(1)
 		}
 		//+kubebuilder:scaffold:builder

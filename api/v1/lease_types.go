@@ -8,7 +8,6 @@ import (
 type LeaseCommonSpec struct {
 	OptionSet corev1.LocalObjectReference `json:"optionSet"`
 
-	// TODO: add cleanup
 	AddressLeaseTime string `json:"addressLeaseTime"`
 }
 
