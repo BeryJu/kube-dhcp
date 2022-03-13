@@ -74,6 +74,7 @@ func (l *LeaseReconciler) checkExpired(lease dhcpv1.Lease) {
 
 // SetupWithManager sets up the controller with the Manager.
 func (l *LeaseReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	l.queue = make(map[types.UID]bool)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&dhcpv1.Lease{}).
 		Complete(l)

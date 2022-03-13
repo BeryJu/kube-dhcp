@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -87,17 +88,49 @@ func (c *Converter) convertScope(sc Scope) {
 			APIVersion: "dhcp.beryju.org/v1",
 		},
 		Spec: dhcpv1.ScopeSpec{
-			SubnetCIDR:    cidr.String(),
-			LeaseTemplate: &dhcpv1.LeaseCommonSpec{},
+			SubnetCIDR: cidr.String(),
+			LeaseTemplate: &dhcpv1.LeaseCommonSpec{
+				OptionSet: corev1.LocalObjectReference{
+					Name: sc.Name,
+				},
+			},
 		},
 	}
 	c.writeFile(&kscope)
+	c.convertScopeOptionValues(kscope, sc.OptionValues.OptionValue)
 	for _, res := range sc.Reservations.Reservation {
 		c.convertReservation(kscope, res)
 	}
 	for _, l := range sc.Leases.Lease {
 		c.convertLease(kscope, l)
 	}
+}
+
+func (c *Converter) convertScopeOptionValues(ks dhcpv1.Scope, val []OptionValue) {
+	kos := dhcpv1.OptionSet{
+		ObjectMeta: v1.ObjectMeta{
+			Name: ks.Name,
+		},
+		TypeMeta: v1.TypeMeta{
+			Kind:       "OptionSet",
+			APIVersion: "dhcp.beryju.org/v1",
+		},
+		Spec: dhcpv1.OptionSetSpec{},
+	}
+	for _, optv := range val {
+		tag, err := strconv.Atoi(optv.OptionId)
+		if err != nil {
+			c.l.Error(err, "failed to convert optionID to int")
+			continue
+		}
+		t := uint8(tag)
+		kopt := dhcpv1.Option{
+			Tag:    &t,
+			Values: optv.Value,
+		}
+		kos.Spec.Options = append(kos.Spec.Options, &kopt)
+	}
+	c.writeFile(&kos)
 }
 
 func (c *Converter) convertReservation(ks dhcpv1.Scope, r Reservation) {

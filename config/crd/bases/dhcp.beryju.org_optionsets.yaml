@@ -55,9 +55,6 @@ spec:
                       required:
                       - key
                       type: object
-                    isVendor:
-                      default: false
-                      type: boolean
                     secretKeyRef:
                       description: Selects a key of a secret in the pod's namespace
                       properties:
@@ -89,7 +86,6 @@ spec:
                         type: string
                       type: array
                   required:
-                  - isVendor
                   - values
                   type: object
                 type: array

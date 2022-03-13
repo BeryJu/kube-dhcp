@@ -2,6 +2,14 @@ package ms_dhcp
 
 import "encoding/xml"
 
+type OptionValue struct {
+	Text        string   `xml:",chardata"`
+	OptionId    string   `xml:"OptionId"`
+	Value       []string `xml:"Value"`
+	VendorClass string   `xml:"VendorClass"`
+	UserClass   string   `xml:"UserClass"`
+}
+
 type Scope struct {
 	Text             string `xml:",chardata"`
 	ScopeId          string `xml:"ScopeId"`
@@ -20,14 +28,8 @@ type Scope struct {
 	ActivatePolicies string `xml:"ActivatePolicies"`
 	SuperScopeName   string `xml:"SuperScopeName"`
 	OptionValues     struct {
-		Text        string `xml:",chardata"`
-		OptionValue []struct {
-			Text        string   `xml:",chardata"`
-			OptionId    string   `xml:"OptionId"`
-			Value       []string `xml:"Value"`
-			VendorClass string   `xml:"VendorClass"`
-			UserClass   string   `xml:"UserClass"`
-		} `xml:"OptionValue"`
+		Text        string        `xml:",chardata"`
+		OptionValue []OptionValue `xml:"OptionValue"`
 	} `xml:"OptionValues"`
 	Reservations struct {
 		Text        string        `xml:",chardata"`
@@ -63,14 +65,8 @@ type Reservation struct {
 	Type         string `xml:"Type"`
 	Description  string `xml:"Description"`
 	OptionValues struct {
-		Text        string `xml:",chardata"`
-		OptionValue struct {
-			Text        string `xml:",chardata"`
-			OptionId    string `xml:"OptionId"`
-			Value       string `xml:"Value"`
-			VendorClass string `xml:"VendorClass"`
-			UserClass   string `xml:"UserClass"`
-		} `xml:"OptionValue"`
+		Text        string      `xml:",chardata"`
+		OptionValue OptionValue `xml:"OptionValue"`
 	} `xml:"OptionValues"`
 }
 
@@ -118,14 +114,8 @@ type DHCPServer struct {
 			} `xml:"OptionDefinition"`
 		} `xml:"OptionDefinitions"`
 		OptionValues struct {
-			Text        string `xml:",chardata"`
-			OptionValue struct {
-				Text        string `xml:",chardata"`
-				OptionId    string `xml:"OptionId"`
-				Value       string `xml:"Value"`
-				VendorClass string `xml:"VendorClass"`
-				UserClass   string `xml:"UserClass"`
-			} `xml:"OptionValue"`
+			Text        string      `xml:",chardata"`
+			OptionValue OptionValue `xml:"OptionValue"`
 		} `xml:"OptionValues"`
 		Filters struct {
 			Text  string `xml:",chardata"`
