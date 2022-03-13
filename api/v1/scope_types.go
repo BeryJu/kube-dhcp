@@ -13,6 +13,9 @@ type ScopeSpec struct {
 
 	LeaseTemplate *LeaseCommonSpec `json:"leaseTemplate"`
 
+	// +kubebuilder:default:="{{ .dhcp.HostName() }}"
+	LeaseNameTemplate string `json:"leaseNameTemplate"`
+
 	Default bool `json:"default"`
 }
 

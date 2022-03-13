@@ -37,6 +37,9 @@ spec:
             properties:
               default:
                 type: boolean
+              leaseNameTemplate:
+                default: '{{ .dhcp.HostName() }}'
+                type: string
               leaseTemplate:
                 properties:
                   addressLeaseTime:
@@ -58,6 +61,7 @@ spec:
                 type: string
             required:
             - default
+            - leaseNameTemplate
             - leaseTemplate
             - subnetCIDR
             type: object

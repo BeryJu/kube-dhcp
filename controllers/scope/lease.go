@@ -15,8 +15,7 @@ import (
 
 func (r *ScopeReconciler) createLeaseFor(scope *dhcpv1.Scope, conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) *dhcpv1.Lease {
 	meta := metav1.ObjectMeta{
-		// TODO: Customisable name
-		Name:      m.HostName(),
+		Name:      r.templateLeaseName(scope, conn, peer, m),
 		Namespace: scope.Namespace,
 	}
 	spec := &dhcpv1.LeaseSpec{
