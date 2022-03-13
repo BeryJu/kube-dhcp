@@ -14,6 +14,7 @@ type LeaseCommonSpec struct {
 // LeaseSpec defines the desired state of Lease
 type LeaseSpec struct {
 	LeaseCommonSpec `json:",inline"`
+	Hostname        string                      `json:"hostname"`
 	Identifier      string                      `json:"identifier"`
 	Address         string                      `json:"address"`
 	Scope           corev1.LocalObjectReference `json:"scope"`
@@ -27,6 +28,7 @@ type LeaseStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:printcolumn:name="Address",type=string,JSONPath=`.spec.address`
+//+kubebuilder:printcolumn:name="Host",type=string,JSONPath=`.spec.hostname`
 //+kubebuilder:printcolumn:name="Scope",type=string,JSONPath=`.spec.scope.name`
 //+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // Lease is the Schema for the leases API

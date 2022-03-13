@@ -6,3 +6,7 @@ spec:
   options:
     - tagName: router
       value: 10.120.22.1
+    - tag: 43
+      values64:
+        # - 01040A78144A
+        - AQQKeBRK

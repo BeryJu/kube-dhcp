@@ -5,6 +5,8 @@ import (
 	"net"
 	"time"
 
+	dhcpv1 "beryju.org/kube-dhcp/api/v1"
+	"beryju.org/kube-dhcp/dns"
 	"github.com/insomniacslk/dhcp/dhcpv4"
 )
 
@@ -20,10 +22,7 @@ func (r *ScopeReconciler) handleDHCPRequest(conn net.PacketConn, peer net.Addr, 
 		r.l.V(1).Info("found scope for new lease")
 		match = r.createLeaseFor(scope, conn, peer, m)
 		r.l.V(1).Info("creating new lease")
-		err := r.Create(context.Background(), match)
-		if err != nil {
-			r.l.Error(err, "failed to create lease")
-		}
+		r.createLease(match, scope)
 	}
 
 	match.Status.LastRequest = time.Now().Format(time.RFC3339)
@@ -35,4 +34,17 @@ func (r *ScopeReconciler) handleDHCPRequest(conn net.PacketConn, peer net.Addr, 
 		d.UpdateOption(dhcpv4.OptMessageType(dhcpv4.MessageTypeAck))
 		return d
 	})
+}
+
+func (r *ScopeReconciler) createLease(lease *dhcpv1.Lease, scope *dhcpv1.Scope) {
+	err := r.Create(context.Background(), lease)
+	if err != nil {
+		r.l.Error(err, "failed to create lease")
+	}
+
+	dns := dns.GetDNSProviderForScope(*scope)
+	err = dns.CreateRecord(lease)
+	if err != nil {
+		r.l.Error(err, "failed to delete DNS record")
+	}
 }

@@ -19,6 +19,9 @@ spec:
     - jsonPath: .spec.address
       name: Address
       type: string
+    - jsonPath: .spec.hostname
+      name: Host
+      type: string
     - jsonPath: .spec.scope.name
       name: Scope
       type: string
@@ -49,6 +52,8 @@ spec:
                 type: string
               addressLeaseTime:
                 type: string
+              hostname:
+                type: string
               identifier:
                 type: string
               optionSet:
@@ -72,6 +77,7 @@ spec:
             required:
             - address
             - addressLeaseTime
+            - hostname
             - identifier
             - optionSet
             - scope

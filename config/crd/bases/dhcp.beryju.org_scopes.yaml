@@ -37,8 +37,20 @@ spec:
             properties:
               default:
                 type: boolean
+              dns:
+                properties:
+                  config:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  provider:
+                    type: string
+                required:
+                - config
+                - provider
+                type: object
               leaseNameTemplate:
-                default: '{{ (call .dhcp.HostName) }}'
+                default: '{{ (call .DHCP.HostName) }}'
                 type: string
               leaseTemplate:
                 properties:
@@ -61,6 +73,7 @@ spec:
                 type: string
             required:
             - default
+            - dns
             - leaseTemplate
             - subnetCIDR
             type: object

@@ -4,8 +4,14 @@ metadata:
   name: scope-sample
 spec:
   subnetCIDR: 10.120.22.0/24
+  leaseNameTemplate: '{{ .DHCP.HostName }}'
   leaseTemplate:
-    addressLeaseTime: 48h
+    addressLeaseTime: 10s
     optionSet:
       name: optionset-sample
   default: true
+  dns:
+    provider: route53
+    config:
+      zoneId: Z087207218FHE2I9LA6X8
+      ttl: "3600"

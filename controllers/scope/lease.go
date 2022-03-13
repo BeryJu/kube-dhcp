@@ -24,6 +24,7 @@ func (r *ScopeReconciler) createLeaseFor(scope *dhcpv1.Scope, conn net.PacketCon
 		Scope: corev1.LocalObjectReference{
 			Name: scope.Name,
 		},
+		Hostname: m.HostName(),
 	}
 	spec.Identifier = m.ClientHWAddr.String()
 	spec.Address = r.nextFreeAddress(*scope).String()
@@ -94,6 +95,7 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 	rep.UpdateOption(dhcpv4.OptSubnetMask(cidr.Mask))
 
 	rep.YourIPAddr = net.ParseIP(lease.Spec.Address)
+	rep.UpdateOption(dhcpv4.OptHostName(lease.Spec.Hostname))
 
 	if lease.Spec.OptionSet.Name != "" {
 		// We need the option set to get the options

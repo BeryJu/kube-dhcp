@@ -14,10 +14,17 @@ type ScopeSpec struct {
 	LeaseTemplate *LeaseCommonSpec `json:"leaseTemplate"`
 
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:="{{ (call .dhcp.HostName) }}"
+	// +kubebuilder:default:="{{ (call .DHCP.HostName) }}"
 	LeaseNameTemplate string `json:"leaseNameTemplate"`
 
 	Default bool `json:"default"`
+
+	DNS ScopeSpecDNS `json:"dns"`
+}
+
+type ScopeSpecDNS struct {
+	Provider string            `json:"provider"`
+	Config   map[string]string `json:"config"`
 }
 
 // ScopeStatus defines the observed state of Scope

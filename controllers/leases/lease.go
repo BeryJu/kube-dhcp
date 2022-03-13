@@ -6,6 +6,7 @@ import (
 	"time"
 
 	dhcpv1 "beryju.org/kube-dhcp/api/v1"
+	"beryju.org/kube-dhcp/dns"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -29,6 +30,7 @@ type LeaseReconciler struct {
 //+kubebuilder:rbac:groups=dhcp.beryju.org,resources=leases/finalizers,verbs=update
 func (l *LeaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	l.l = ctrl.Log
+	l.l.V(1).Info("lease reconcile run")
 
 	leases := &dhcpv1.LeaseList{}
 	err := l.List(ctx, leases)
@@ -61,14 +63,35 @@ func (l *LeaseReconciler) checkExpired(lease dhcpv1.Lease) {
 	}
 	delta := time.Until(created.Add(dur))
 	if delta < 0 {
-		err := l.Delete(context.Background(), &lease)
-		if err != nil {
-			l.l.Error(err, "failed to delete lease", "lease", lease.Name)
-		}
+		l.deleteLease(lease)
 	} else {
 		time.Sleep(delta)
 		l.checkExpired(lease)
 		return
+	}
+}
+
+func (l *LeaseReconciler) deleteLease(lease dhcpv1.Lease) {
+	err := l.Delete(context.Background(), &lease)
+	if err != nil {
+		l.l.Error(err, "failed to delete lease", "lease", lease.Name)
+		return
+	}
+
+	// Get scope to get DNS config
+	var scope dhcpv1.Scope
+	err = l.Get(context.Background(), client.ObjectKey{
+		Namespace: lease.Namespace,
+		Name:      lease.Spec.Scope.Name,
+	}, &scope)
+	if err != nil {
+		l.l.Error(err, "failed to get scope for DNS config")
+		return
+	}
+	dns := dns.GetDNSProviderForScope(scope)
+	err = dns.DeleteRecord(&lease)
+	if err != nil {
+		l.l.Error(err, "failed to delete DNS record")
 	}
 }
 

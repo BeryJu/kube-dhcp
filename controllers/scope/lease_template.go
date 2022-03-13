@@ -11,13 +11,13 @@ import (
 )
 
 type LeaseNameTemplateContext struct {
-	dhcp *dhcpv4.DHCPv4
+	DHCP *dhcpv4.DHCPv4
 }
 
 func (r *ScopeReconciler) templateLeaseName(scope *dhcpv1.Scope, conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) string {
 	def := m.HostName()
 	ctx := LeaseNameTemplateContext{
-		dhcp: m,
+		DHCP: m,
 	}
 	tmpl, err := template.New("").Parse(scope.Spec.LeaseNameTemplate)
 	if err != nil {
