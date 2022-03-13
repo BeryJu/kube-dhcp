@@ -3,6 +3,7 @@ package cmd
 import (
 	"flag"
 	"os"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -24,6 +25,7 @@ import (
 	//+kubebuilder:scaffold:imports
 	"fmt"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/spf13/cobra"
 )
 
@@ -46,6 +48,19 @@ var rootCmd = &cobra.Command{
 		flag.Parse()
 
 		ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+		err := sentry.Init(sentry.ClientOptions{
+			// Either set environment and release here or set the SENTRY_ENVIRONMENT
+			// and SENTRY_RELEASE environment variables.
+			Environment: "development",
+			Release:     "kube-dhcp@0.0.0",
+		})
+		if err != nil {
+			ctrl.Log.Info("sentry.Init: %s", err)
+		}
+		// Flush buffered events before the program terminates.
+		// Set the timeout to the maximum duration the program can afford to wait.
+		defer sentry.Flush(2 * time.Second)
 
 		mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 			Scheme:                 scheme,
