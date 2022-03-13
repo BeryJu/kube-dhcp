@@ -107,14 +107,20 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 			return
 		}
 		for _, opt := range options.Spec.Options {
+			finalVal := make([]byte, 0)
 			r.l.V(1).Info("applying options from optionset", "option", opt.Tag)
 			if opt.Tag == nil {
-				break
+				continue
 			}
 
 			// Values which are directly converted from string to byte
 			if opt.Value != nil {
-				rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(*opt.Tag), []byte(*opt.Value)))
+				i := net.ParseIP(*opt.Value)
+				if i == nil {
+					finalVal = []byte(*opt.Value)
+				} else {
+					finalVal = dhcpv4.IPs([]net.IP{i}).ToBytes()
+				}
 			}
 
 			// For non-stringable values, get b64 decoded values
@@ -128,8 +134,10 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 						values64 = append(values64, va...)
 					}
 				}
-				rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(*opt.Tag), values64))
+				finalVal = values64
 			}
+			dopt := dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(*opt.Tag), finalVal)
+			rep.UpdateOption(dopt)
 		}
 	}
 
