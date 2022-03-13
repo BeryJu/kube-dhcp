@@ -21,8 +21,14 @@ type Option struct {
 	// Tag name
 	// +kubebuilder:validation:Optional
 	// +nullable
-	TagName *string  `json:"tagName"`
-	Values  []string `json:"values"`
+	TagName *string `json:"tagName"`
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
+	Values []string `json:"values"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
+	Values64 []string `json:"values64"`
 
 	ConfigMapKeyRef *corev1.ConfigMapKeySelector `json:"configMapKeyRef,omitempty" protobuf:"bytes,3,opt,name=configMapKeyRef"`
 	// Selects a key of a secret in the pod's namespace

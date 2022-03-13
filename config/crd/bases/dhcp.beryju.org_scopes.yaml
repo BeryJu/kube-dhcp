@@ -61,7 +61,6 @@ spec:
                 type: string
             required:
             - default
-            - leaseNameTemplate
             - leaseTemplate
             - subnetCIDR
             type: object

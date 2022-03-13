@@ -4,5 +4,6 @@ metadata:
   name: optionset-sample
 spec:
   options:
-    - tag: 3
-      value: 10.120.22.1
+    - tagName: router
+      values:
+        - 10.120.22.1

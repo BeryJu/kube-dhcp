@@ -2,6 +2,7 @@ package scope
 
 import (
 	"context"
+	"encoding/base64"
 	"net"
 	"time"
 
@@ -110,9 +111,25 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 			if opt.Tag == nil {
 				break
 			}
+
+			// Values which are directly converted from string to byte
+			values := make([]byte, 0)
 			for _, v := range opt.Values {
-				rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(*opt.Tag), []byte(v)))
+				values = append(values, []byte(v)...)
 			}
+			rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(*opt.Tag), values))
+
+			// For non-stringable values, get b64 decoded values
+			values64 := make([]byte, 0)
+			for _, v := range opt.Values64 {
+				va, err := base64.StdEncoding.DecodeString(v)
+				if err != nil {
+					r.l.Error(err, "failed to convert base64 value to byte")
+				} else {
+					values64 = append(values, va...)
+				}
+			}
+			rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(*opt.Tag), values64))
 		}
 	}
 

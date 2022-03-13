@@ -85,8 +85,10 @@ spec:
                       items:
                         type: string
                       type: array
-                  required:
-                  - values
+                    values64:
+                      items:
+                        type: string
+                      type: array
                   type: object
                 type: array
             required:

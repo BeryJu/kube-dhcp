@@ -135,6 +135,11 @@ func (in *Option) DeepCopyInto(out *Option) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.Values64 != nil {
+		in, out := &in.Values64, &out.Values64
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.ConfigMapKeyRef != nil {
 		in, out := &in.ConfigMapKeyRef, &out.ConfigMapKeyRef
 		*out = new(corev1.ConfigMapKeySelector)
