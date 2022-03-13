@@ -38,7 +38,7 @@ spec:
               default:
                 type: boolean
               leaseNameTemplate:
-                default: '{{ .dhcp.HostName() }}'
+                default: '{{ (call .dhcp.HostName) }}'
                 type: string
               leaseTemplate:
                 properties:

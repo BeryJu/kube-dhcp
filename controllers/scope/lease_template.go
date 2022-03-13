@@ -19,7 +19,11 @@ func (r *ScopeReconciler) templateLeaseName(scope *dhcpv1.Scope, conn net.Packet
 	ctx := LeaseNameTemplateContext{
 		dhcp: m,
 	}
-	tmpl := template.Must(template.New("").Parse(scope.Spec.LeaseNameTemplate))
+	tmpl, err := template.New("").Parse(scope.Spec.LeaseNameTemplate)
+	if err != nil {
+		r.l.Error(err, "failed to render template", "tmpl", scope.Spec.LeaseNameTemplate)
+		return def
+	}
 	var tpl bytes.Buffer
 	if err := tmpl.Execute(&tpl, ctx); err != nil {
 		r.l.Error(err, "failed to template lease name")
