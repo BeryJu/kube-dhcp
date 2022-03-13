@@ -24,8 +24,9 @@ type Option struct {
 	TagName *string `json:"tagName"`
 
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
-	Values []string `json:"values"`
+	// +kubebuilder:default:=""
+	// +nullable
+	Value *string `json:"value"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:={}
 	Values64 []string `json:"values64"`

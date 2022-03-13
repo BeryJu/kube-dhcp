@@ -81,10 +81,10 @@ spec:
                       description: Tag name
                       nullable: true
                       type: string
-                    values:
-                      items:
-                        type: string
-                      type: array
+                    value:
+                      default: ""
+                      nullable: true
+                      type: string
                     values64:
                       items:
                         type: string

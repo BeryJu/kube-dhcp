@@ -124,9 +124,10 @@ func (c *Converter) convertScopeOptionValues(ks dhcpv1.Scope, val []OptionValue)
 			continue
 		}
 		t := uint8(tag)
+		v := optv.Value[0]
 		kopt := dhcpv1.Option{
-			Tag:    &t,
-			Values: optv.Value,
+			Tag:   &t,
+			Value: &v,
 		}
 		kos.Spec.Options = append(kos.Spec.Options, &kopt)
 	}

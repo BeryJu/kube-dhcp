@@ -130,10 +130,10 @@ func (in *Option) DeepCopyInto(out *Option) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.Values != nil {
-		in, out := &in.Values, &out.Values
-		*out = make([]string, len(*in))
-		copy(*out, *in)
+	if in.Value != nil {
+		in, out := &in.Value, &out.Value
+		*out = new(string)
+		**out = **in
 	}
 	if in.Values64 != nil {
 		in, out := &in.Values64, &out.Values64

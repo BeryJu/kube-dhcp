@@ -113,23 +113,23 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 			}
 
 			// Values which are directly converted from string to byte
-			values := make([]byte, 0)
-			for _, v := range opt.Values {
-				values = append(values, []byte(v)...)
+			if opt.Value != nil {
+				rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(*opt.Tag), []byte(*opt.Value)))
 			}
-			rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(*opt.Tag), values))
 
 			// For non-stringable values, get b64 decoded values
-			values64 := make([]byte, 0)
-			for _, v := range opt.Values64 {
-				va, err := base64.StdEncoding.DecodeString(v)
-				if err != nil {
-					r.l.Error(err, "failed to convert base64 value to byte")
-				} else {
-					values64 = append(values, va...)
+			if len(opt.Values64) > 0 {
+				values64 := make([]byte, 0)
+				for _, v := range opt.Values64 {
+					va, err := base64.StdEncoding.DecodeString(v)
+					if err != nil {
+						r.l.Error(err, "failed to convert base64 value to byte")
+					} else {
+						values64 = append(values64, va...)
+					}
 				}
+				rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(*opt.Tag), values64))
 			}
-			rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(*opt.Tag), values64))
 		}
 	}
 
