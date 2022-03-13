@@ -15,6 +15,7 @@ COPY api/ api/
 COPY controllers/ controllers/
 COPY cmd/ cmd/
 COPY convert/ convert/
+COPY dns/ dns/
 
 # Build
 RUN CGO_ENABLED=0 GOOS=linux go build -a -o manager .

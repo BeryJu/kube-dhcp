@@ -6,7 +6,7 @@ spec:
   subnetCIDR: 10.120.22.0/24
   leaseNameTemplate: '{{ .DHCP.HostName }}'
   leaseTemplate:
-    addressLeaseTime: 10s
+    addressLeaseTime: 48h
     optionSet:
       name: optionset-sample
   default: true

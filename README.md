@@ -12,7 +12,7 @@ See the files in `config/samples/` on how to configure it.
 
 ## Why
 
-Basically, I was fed up with Active Directory's DNS Server, I didn't feel like implementing a completely new API (like Kea for example offers) into my workflows and I wanted to build something with kubebuilder.
+Basically, I was fed up with Active Directory's DHCP Server, I didn't feel like implementing a completely new API (like Kea for example offers) into my workflows and I wanted to build something with kubebuilder.
 
 ## Demo
 
