@@ -107,8 +107,11 @@ func (r *ScopeReconciler) replyWithLease(lease *dhcpv1.Lease, conn net.PacketCon
 		}
 		for _, opt := range options.Spec.Options {
 			r.l.V(1).Info("applying options from optionset", "option", opt.Tag)
+			if opt.Tag == nil {
+				break
+			}
 			for _, v := range opt.Values {
-				rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(opt.Tag), []byte(v)))
+				rep.UpdateOption(dhcpv4.OptGeneric(dhcpv4.GenericOptionCode(*opt.Tag), []byte(v)))
 			}
 		}
 	}

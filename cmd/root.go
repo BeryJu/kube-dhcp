@@ -17,7 +17,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	dhcpv1 "beryju.org/kube-dhcp/api/v1"
-	"beryju.org/kube-dhcp/controllers"
+	"beryju.org/kube-dhcp/controllers/leases"
+	"beryju.org/kube-dhcp/controllers/option_sets"
 	"beryju.org/kube-dhcp/controllers/scope"
 
 	//+kubebuilder:scaffold:imports
@@ -66,11 +67,18 @@ var rootCmd = &cobra.Command{
 			setupLog.Error(err, "unable to create controller", "controller", "Scope")
 			os.Exit(1)
 		}
-		if err = (&controllers.LeaseReconciler{
+		if err = (&leases.LeaseReconciler{
 			Client: mgr.GetClient(),
 			Scheme: mgr.GetScheme(),
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Lease")
+			os.Exit(1)
+		}
+		if err = (&option_sets.OptionSetReconciler{
+			Client: mgr.GetClient(),
+			Scheme: mgr.GetScheme(),
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "OptionSet")
 			os.Exit(1)
 		}
 		//+kubebuilder:scaffold:builder

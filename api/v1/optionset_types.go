@@ -14,8 +14,15 @@ type OptionSetSpec struct {
 }
 
 type Option struct {
-	Tag    int32    `json:"tag"`
-	Values []string `json:"values"`
+	// Raw tag sent to the client, see https://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xhtml
+	// +kubebuilder:validation:Optional
+	// +nullable
+	Tag *uint8 `json:"tag"`
+	// Tag name
+	// +kubebuilder:validation:Optional
+	// +nullable
+	TagName *string  `json:"tagName"`
+	Values  []string `json:"values"`
 
 	ConfigMapKeyRef *corev1.ConfigMapKeySelector `json:"configMapKeyRef,omitempty" protobuf:"bytes,3,opt,name=configMapKeyRef"`
 	// Selects a key of a secret in the pod's namespace

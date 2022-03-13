@@ -1,4 +1,4 @@
-package controllers
+package leases
 
 import (
 	"context"
@@ -31,9 +31,9 @@ func (l *LeaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	l.l = ctrl.Log
 
 	leases := &dhcpv1.LeaseList{}
-	err := l.List(context.Background(), leases)
+	err := l.List(ctx, leases)
 	if err != nil {
-		l.l.Error(err, "failed to list optionSets")
+		l.l.Error(err, "failed to list leases")
 		return ctrl.Result{}, err
 	}
 

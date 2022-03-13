@@ -55,6 +55,9 @@ spec:
                       required:
                       - key
                       type: object
+                    isVendor:
+                      default: false
+                      type: boolean
                     secretKeyRef:
                       description: Selects a key of a secret in the pod's namespace
                       properties:
@@ -74,14 +77,19 @@ spec:
                       - key
                       type: object
                     tag:
-                      format: int32
+                      description: Raw tag sent to the client, see https://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xhtml
+                      nullable: true
                       type: integer
+                    tagName:
+                      description: Tag name
+                      nullable: true
+                      type: string
                     values:
                       items:
                         type: string
                       type: array
                   required:
-                  - tag
+                  - isVendor
                   - values
                   type: object
                 type: array
