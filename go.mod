@@ -3,7 +3,9 @@ module beryju.org/kube-dhcp
 go 1.17
 
 require (
-	github.com/go-logr/logr v1.2.0
+	github.com/aws/aws-sdk-go v1.43.17
+	github.com/getsentry/sentry-go v0.13.0
+	github.com/go-logr/logr v1.2.2
 	github.com/gosimple/slug v1.12.0
 	github.com/insomniacslk/dhcp v0.0.0-20220119180841-3c283ff8b7dd
 	github.com/onsi/ginkgo v1.16.5
@@ -23,14 +25,12 @@ require (
 	github.com/Azure/go-autorest/autorest/date v0.3.0 // indirect
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
-	github.com/aws/aws-sdk-go v1.43.17 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
-	github.com/getsentry/sentry-go v0.13.0 // indirect
 	github.com/go-logr/zapr v1.2.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
