@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"net"
+	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -16,7 +17,7 @@ import (
 
 func (r *ScopeReconciler) createLeaseFor(scope *dhcpv1.Scope, conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) *dhcpv1.Lease {
 	meta := metav1.ObjectMeta{
-		Name:      r.templateLeaseName(scope, conn, peer, m),
+		Name:      strings.ToLower(r.templateLeaseName(scope, conn, peer, m)),
 		Namespace: scope.Namespace,
 	}
 	spec := &dhcpv1.LeaseSpec{
