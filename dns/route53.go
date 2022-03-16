@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"errors"
 	"strconv"
 
 	dhcpv1 "beryju.org/kube-dhcp/api/v1"
@@ -19,11 +20,19 @@ type Route53DNSProvider struct {
 	z             *r53.GetHostedZoneOutput
 }
 
-func NewRoute53Provider(config map[string]string) *Route53DNSProvider {
+func NewRoute53Provider(config map[string]string) (*Route53DNSProvider, error) {
 	p := &Route53DNSProvider{}
-	// TODO: error handling
-	p.zoneId = config["zoneId"]
-	p.reverseZoneId = config["reverseZoneId"]
+
+	if zone, zoneOk := config["zoneId"]; !zoneOk {
+		return nil, errors.New("zoneId not set in scope config")
+	} else {
+		p.zoneId = zone
+	}
+
+	if reverseZoneId, reverseZoneIdOk := config["reverseZoneIdId"]; reverseZoneIdOk {
+		p.reverseZoneId = reverseZoneId
+	}
+
 	ttl, err := strconv.Atoi(config["ttl"])
 	if err != nil {
 		ttl = 3600
@@ -32,8 +41,7 @@ func NewRoute53Provider(config map[string]string) *Route53DNSProvider {
 
 	sess, err := session.NewSession()
 	if err != nil {
-		// todo: error handling
-		panic(err)
+		return nil, err
 	}
 
 	p.r = route53.New(sess)
@@ -42,11 +50,11 @@ func NewRoute53Provider(config map[string]string) *Route53DNSProvider {
 		Id: &p.zoneId,
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	p.z = zone
 
-	return p
+	return p, nil
 }
 
 func (r *Route53DNSProvider) updateRecord(chg *route53.Change, zone string) error {

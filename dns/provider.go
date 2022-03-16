@@ -21,13 +21,13 @@ func (b *BaseDNSProvider) CreateRecord(lease *dhcpv1.Lease) error { return nil }
 func (b *BaseDNSProvider) UpdateRecord(lease *dhcpv1.Lease) error { return nil }
 func (b *BaseDNSProvider) DeleteRecord(lease *dhcpv1.Lease) error { return nil }
 
-func GetDNSProviderForScope(scope dhcpv1.Scope) DNSProvider {
+func GetDNSProviderForScope(scope dhcpv1.Scope) (DNSProvider, error) {
 	switch strings.ToLower(scope.Spec.DNS.Provider) {
 	case "route53":
 		return NewRoute53Provider(scope.Spec.DNS.Config)
 	case "":
 		fallthrough
 	default:
-		return NewBaseProvider()
+		return NewBaseProvider(), nil
 	}
 }

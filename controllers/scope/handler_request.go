@@ -42,7 +42,11 @@ func (r *ScopeReconciler) createLease(lease *dhcpv1.Lease, scope *dhcpv1.Scope) 
 		r.l.Error(err, "failed to create lease")
 	}
 
-	dns := dns.GetDNSProviderForScope(*scope)
+	dns, err := dns.GetDNSProviderForScope(*scope)
+	if err != nil {
+		r.l.Error(err, "failed to get DNS provider")
+		return
+	}
 	err = dns.CreateRecord(lease)
 	if err != nil {
 		r.l.Error(err, "failed to delete DNS record")

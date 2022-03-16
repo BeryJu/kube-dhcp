@@ -88,7 +88,11 @@ func (l *LeaseReconciler) deleteLease(lease dhcpv1.Lease) {
 		l.l.Error(err, "failed to get scope for DNS config")
 		return
 	}
-	dns := dns.GetDNSProviderForScope(scope)
+	dns, err := dns.GetDNSProviderForScope(scope)
+	if err != nil {
+		l.l.Error(err, "failed to get DNS provider")
+		return
+	}
 	err = dns.DeleteRecord(&lease)
 	if err != nil {
 		l.l.Error(err, "failed to delete DNS record")
