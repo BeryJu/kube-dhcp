@@ -59,15 +59,16 @@ func (l *LeaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	// this approach probably leaks goroutines all over the place,
 	// since waiting ones are never cancelled/removed
 	for _, lease := range leases.Items {
-		_, qs := l.queue[lease.UID]
-		if !qs {
-			go l.checkExpired(lease)
-		}
-
 		scope := l.scopeForLease(scopes, lease)
 		if scope == nil {
 			continue
 		}
+
+		_, qs := l.queue[lease.UID]
+		if !qs {
+			go l.checkExpired(lease, scope)
+		}
+
 		dns, err := dns.GetDNSProviderForScope(*scope)
 		if err != nil {
 			l.l.Error(err, "failed to get DNS provider")
@@ -75,17 +76,22 @@ func (l *LeaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		err = dns.CreateRecord(&lease)
 		if err == nil {
 			l.l.Info("added missing dns record")
+		} else {
+			l.l.Error(err, "failed to add dns record (this is probably fine)")
 		}
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (l *LeaseReconciler) checkExpired(lease dhcpv1.Lease) {
+func (l *LeaseReconciler) checkExpired(lease dhcpv1.Lease, scope *dhcpv1.Scope) {
 	l.queueMutex.Lock()
 	l.queue[lease.UID] = true
 	l.queueMutex.Unlock()
 	created := lease.CreationTimestamp.Time
+	if lease.Spec.AddressLeaseTime == "" {
+		lease.Spec.AddressLeaseTime = scope.Spec.LeaseTemplate.AddressLeaseTime
+	}
 	dur, err := time.ParseDuration(lease.Spec.AddressLeaseTime)
 	if err != nil {
 		l.l.Error(err, "failed to parse duration in lease", "lease", lease.Name)
@@ -96,7 +102,7 @@ func (l *LeaseReconciler) checkExpired(lease dhcpv1.Lease) {
 		l.deleteLease(lease)
 	} else {
 		time.Sleep(delta)
-		l.checkExpired(lease)
+		l.checkExpired(lease, scope)
 		return
 	}
 }

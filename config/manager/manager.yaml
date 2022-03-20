@@ -25,7 +25,7 @@ spec:
         control-plane: controller-manager
     spec:
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       hostNetwork: true
       containers:
       - command:
@@ -35,7 +35,10 @@ spec:
         image: controller:latest
         name: manager
         securityContext:
+          capabilities:
+            add: ["NET_ADMIN"]
           allowPrivilegeEscalation: false
+          runAsUser: 0
         livenessProbe:
           httpGet:
             path: /healthz
