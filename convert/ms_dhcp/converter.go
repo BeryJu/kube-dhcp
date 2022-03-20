@@ -150,9 +150,13 @@ func (c *Converter) convertReservation(ks dhcpv1.Scope, r Reservation) {
 		},
 		Spec: dhcpv1.LeaseSpec{
 			Identifier: strings.ReplaceAll(r.ClientId, "-", ":"),
+			Hostname:   r.Name,
 			Address:    r.IPAddress,
 			Scope: corev1.LocalObjectReference{
 				Name: ks.Name,
+			},
+			LeaseCommonSpec: dhcpv1.LeaseCommonSpec{
+				AddressLeaseTime: "-1",
 			},
 		},
 	}

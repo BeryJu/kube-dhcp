@@ -16,8 +16,8 @@ spec:
   dns:
     provider: route53
     config:
-      accessKey: Foo
+      accessKey: foo
       secretKey: bar
-      zoneId: Z075720839VZLEYWCGF7B
-      reverseZoneId: Z07534501KETL314B9LHZ
+      zoneId: yee
+      reverseZoneId: yee
       ttl: "3600"

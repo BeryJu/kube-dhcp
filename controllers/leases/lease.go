@@ -82,6 +82,10 @@ func (l *LeaseReconciler) checkExpired(lease dhcpv1.Lease, scope dhcpv1.Scope) {
 	if lease.Spec.AddressLeaseTime == "" {
 		lease.Spec.AddressLeaseTime = scope.Spec.LeaseTemplate.AddressLeaseTime
 	}
+	if lease.Spec.AddressLeaseTime == "-1" {
+		l.l.V(1).Info("lease is non expiring", "lease", lease.Name)
+		return
+	}
 	dur, err := time.ParseDuration(lease.Spec.AddressLeaseTime)
 	if err != nil {
 		l.l.Error(err, "failed to parse duration in lease", "lease", lease.Name)
