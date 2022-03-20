@@ -3,7 +3,10 @@ kind: Scope
 metadata:
   name: scope-sample
 spec:
-  subnetCIDR: 10.120.22.0/24
+  subnetCIDR: 10.120.20.0/24
+  range:
+    start: 10.120.20.50
+    end: 10.120.20.150
   leaseNameTemplate: '{{ .DHCP.HostName }}'
   leaseTemplate:
     addressLeaseTime: 48h

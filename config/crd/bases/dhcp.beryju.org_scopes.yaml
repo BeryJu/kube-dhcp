@@ -69,12 +69,23 @@ spec:
                 - addressLeaseTime
                 - optionSet
                 type: object
+              range:
+                properties:
+                  end:
+                    type: string
+                  start:
+                    type: string
+                required:
+                - end
+                - start
+                type: object
               subnetCIDR:
                 type: string
             required:
             - default
             - dns
             - leaseTemplate
+            - range
             - subnetCIDR
             type: object
           status:

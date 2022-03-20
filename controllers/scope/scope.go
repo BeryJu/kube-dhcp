@@ -2,8 +2,8 @@ package scope
 
 import (
 	"context"
-	"math/big"
 	"net"
+	"net/netip"
 
 	dhcpv1 "beryju.org/kube-dhcp/api/v1"
 	"github.com/insomniacslk/dhcp/dhcpv4"
@@ -53,9 +53,9 @@ func (r *ScopeReconciler) matchScope(scope dhcpv1.Scope, conn net.PacketConn, pe
 	return false
 }
 
-func (r *ScopeReconciler) nextFreeAddress(scope dhcpv1.Scope) *net.IP {
+func (r *ScopeReconciler) nextFreeAddress(scope dhcpv1.Scope) *netip.Addr {
 	// Check cidrs
-	initialIp, cidr, err := net.ParseCIDR(scope.Spec.SubnetCIDR)
+	cidr, err := netip.ParsePrefix(scope.Spec.SubnetCIDR)
 	if err != nil {
 		r.l.Error(err, "failed to parse cidr", "scope", scope.ObjectMeta.Name)
 		scope.Status.State = err.Error()
@@ -73,19 +73,35 @@ func (r *ScopeReconciler) nextFreeAddress(scope dhcpv1.Scope) *net.IP {
 		return nil
 	}
 
+	start, err := netip.ParseAddr(scope.Spec.Range.Start)
+	if err != nil {
+		r.l.Error(err, "failed to parse start")
+		return nil
+	}
+	end, err := netip.ParseAddr(scope.Spec.Range.End)
+	if err != nil {
+		r.l.Error(err, "failed to parse end")
+		return nil
+	}
+
+	initialIp := cidr.Addr()
 	for {
-		// Get next IP
-		ipb := big.NewInt(0).SetBytes([]byte(initialIp))
-		ipb.Add(ipb, big.NewInt(1))
-		b := ipb.Bytes()
-		b = append(make([]byte, len(initialIp)-len(b)), b...)
-		initialIp = net.IP(b)
+		initialIp = initialIp.Next()
 		r.l.V(1).Info("checking for free ip", "ip", initialIp.String())
 		// Check if IP is in the correct subnet
 		if !cidr.Contains(initialIp) {
 			return nil
 		}
 		foundExisting := false
+		// Ip is less than the start of the range
+		if start.Compare(initialIp) == -1 {
+			foundExisting = true
+		}
+		// Ip is more than the end of the range
+		if end.Compare(initialIp) == 1 {
+			foundExisting = true
+		}
+		// check for existing leases
 		for _, l := range leases.Items {
 			if l.Spec.Address == initialIp.String() {
 				foundExisting = true

@@ -19,7 +19,13 @@ type ScopeSpec struct {
 
 	Default bool `json:"default"`
 
-	DNS ScopeSpecDNS `json:"dns"`
+	DNS   ScopeSpecDNS   `json:"dns"`
+	Range ScopeSpecRange `json:"range"`
+}
+
+type ScopeSpecRange struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
 }
 
 type ScopeSpecDNS struct {
