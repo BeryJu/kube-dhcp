@@ -24,7 +24,7 @@ func (r *ScopeReconciler) ensureRunning() {
 func (r *ScopeReconciler) startServer() error {
 	laddr := net.UDPAddr{
 		IP:   net.ParseIP("0.0.0.0"),
-		Port: 1067,
+		Port: 67,
 	}
 	server, err := server4.NewServer("", &laddr, r.handler)
 	if err != nil {

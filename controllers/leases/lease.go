@@ -65,7 +65,9 @@ func (l *LeaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 
 		scope := l.scopeForLease(scopes, lease)
-
+		if scope == nil {
+			continue
+		}
 		dns, err := dns.GetDNSProviderForScope(*scope)
 		if err != nil {
 			l.l.Error(err, "failed to get DNS provider")
