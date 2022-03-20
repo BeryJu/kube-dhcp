@@ -7,6 +7,7 @@ import (
 	dhcpv1 "beryju.org/kube-dhcp/api/v1"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/route53"
 	r53 "github.com/aws/aws-sdk-go/service/route53"
@@ -39,7 +40,14 @@ func NewRoute53Provider(config map[string]string) (*Route53DNSProvider, error) {
 	}
 	p.ttl = int64(ttl)
 
-	sess, err := session.NewSession()
+	cfg := aws.NewConfig()
+	if access, set := config["accessKey"]; set {
+		secret := config["secretKey"]
+		creds := credentials.NewStaticCredentials(access, secret, "")
+		cfg = aws.NewConfig().WithCredentials(creds)
+	}
+
+	sess, err := session.NewSession(cfg)
 	if err != nil {
 		return nil, err
 	}
