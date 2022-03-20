@@ -18,7 +18,7 @@ COPY convert/ convert/
 COPY dns/ dns/
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux go build -a -o manager .
+RUN CGO_ENABLED=0 GOOS=linux go build -v -a -o manager .
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
