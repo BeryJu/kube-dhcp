@@ -184,7 +184,7 @@ func (c *Converter) writeFile(o client.Object) {
 	if err != nil {
 		log.Println(err)
 	}
-	path := fmt.Sprintf("./%s/%s.json", c.out, o.GetName())
+	path := fmt.Sprintf("./%s/%s-%s.json", c.out, o.GetObjectKind().GroupVersionKind().Kind, o.GetName())
 	err = ioutil.WriteFile(path, y, os.ModeSticky|os.ModePerm)
 	if err != nil {
 		log.Println(err)
