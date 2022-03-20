@@ -31,7 +31,9 @@ func (r *ScopeReconciler) createLeaseFor(scope *dhcpv1.Scope, conn net.PacketCon
 	spec.Identifier = m.ClientHWAddr.String()
 	spec.Address = r.nextFreeAddress(*scope).String()
 	if requestIp, ok := netip.AddrFromSlice(m.Options.Get(dhcpv4.OptionRequestedIPAddress)); ok {
+		r.l.V(1).Info("checking requested IP", "ip", requestIp)
 		if r.isIPFree(*scope, requestIp) {
+			r.l.V(1).Info("requested IP is free", "ip", requestIp)
 			spec.Address = requestIp.String()
 		}
 	}
