@@ -47,7 +47,8 @@ func (r *ScopeReconciler) findLease(m *dhcpv4.DHCPv4) *dhcpv1.Lease {
 		r.l.Error(err, "failed to list leases")
 		return nil
 	}
-	r.l.V(1).Info("cheking for existing lease")
+	cid := string(m.Options.Get(dhcpv4.OptionClientIdentifier))
+	r.l.V(1).Info("cheking for existing lease", "mac", m.ClientHWAddr.String(), "cid", cid)
 	var match *dhcpv1.Lease
 	for _, lease := range leases.Items {
 		if lease.Spec.Identifier == m.ClientHWAddr.String() {
@@ -55,7 +56,7 @@ func (r *ScopeReconciler) findLease(m *dhcpv4.DHCPv4) *dhcpv1.Lease {
 			match = &lease
 			break
 		}
-		if lease.Spec.Identifier == m.ClassIdentifier() {
+		if lease.Spec.Identifier == cid {
 			r.l.V(1).Info("found matching lease", "by", "cid", "lease", lease)
 			match = &lease
 			break
