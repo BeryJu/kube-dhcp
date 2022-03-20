@@ -24,32 +24,34 @@ type OptionSetReconciler struct {
 func (os *OptionSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	os.l = ctrl.Log
 
-	sets := &dhcpv1.OptionSetList{}
-	err := os.List(ctx, sets)
+	var set dhcpv1.OptionSet
+
+	err := os.Get(ctx, client.ObjectKey{
+		Namespace: req.Namespace,
+		Name:      req.Name,
+	}, &set)
 	if err != nil {
-		os.l.Error(err, "failed to list optionSets")
+		os.l.Error(err, "failed to get optionset")
 		return ctrl.Result{}, err
 	}
 
-	for _, set := range sets.Items {
-		setDirty := false
-		for _, opt := range set.Spec.Options {
-			// Check if we need to update Tag
-			if opt.Tag == nil && opt.TagName != nil {
-				tag, o := TagMap[*opt.TagName]
-				if !o {
-					os.l.Info("failed to map tag name to tag", "optionSet", set.Name, "tag", opt.TagName)
-				} else {
-					opt.Tag = &tag
-					setDirty = true
-				}
+	setDirty := false
+	for _, opt := range set.Spec.Options {
+		// Check if we need to update Tag
+		if opt.Tag == nil && opt.TagName != nil {
+			tag, o := TagMap[*opt.TagName]
+			if !o {
+				os.l.Info("failed to map tag name to tag", "optionSet", set.Name, "tag", opt.TagName)
+			} else {
+				opt.Tag = &tag
+				setDirty = true
 			}
 		}
-		if setDirty {
-			err := os.Update(ctx, &set)
-			if err != nil {
-				os.l.Error(err, "failed to update set")
-			}
+	}
+	if setDirty {
+		err := os.Update(ctx, &set)
+		if err != nil {
+			os.l.Error(err, "failed to update set")
 		}
 	}
 

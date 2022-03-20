@@ -40,24 +40,6 @@ func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	r.ensureRunning()
 
-	scopeList := &dhcpv1.ScopeList{}
-	err := r.List(ctx, scopeList)
-	if err != nil {
-		r.l.Error(err, "failed to list scopes")
-		return ctrl.Result{}, err
-	}
-	r.l.V(1).Info("got all scopes", "scopeCount", len(scopeList.Items))
-	r.scopes = scopeList.Items
-
-	optionSetList := &dhcpv1.OptionSetList{}
-	err = r.List(ctx, optionSetList)
-	if err != nil {
-		r.l.Error(err, "failed to list optionSets")
-		return ctrl.Result{}, err
-	}
-	r.l.V(1).Info("got all optionSets", "optionSetCount", len(optionSetList.Items))
-	r.optionSets = optionSetList.Items
-
 	return ctrl.Result{}, nil
 }
 

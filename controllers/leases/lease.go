@@ -25,66 +25,56 @@ type LeaseReconciler struct {
 	queueMutex sync.Mutex
 }
 
-func (l *LeaseReconciler) scopeForLease(scopes *dhcpv1.ScopeList, lease dhcpv1.Lease) *dhcpv1.Scope {
-	for _, scope := range scopes.Items {
-		if scope.ObjectMeta.Name == lease.Spec.Scope.Name {
-			return &scope
-		}
-	}
-	return nil
-}
-
 //+kubebuilder:rbac:groups=dhcp.beryju.org,resources=leases,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=dhcp.beryju.org,resources=leases/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=dhcp.beryju.org,resources=leases/finalizers,verbs=update
 func (l *LeaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	l.l = ctrl.Log
 
-	l.l.V(1).Info("lease reconcile run")
+	l.l.V(1).Info("lease reconcile run", "lease", req.String())
 
-	leases := &dhcpv1.LeaseList{}
-	err := l.List(ctx, leases)
+	var lease dhcpv1.Lease
+	var scope dhcpv1.Scope
+
+	err := l.Get(ctx, client.ObjectKey{
+		Namespace: req.Namespace,
+		Name:      req.Name,
+	}, &lease)
 	if err != nil {
-		l.l.Error(err, "failed to list leases")
+		l.l.Error(err, "failed to get leases")
 		return ctrl.Result{}, err
 	}
 
-	scopes := &dhcpv1.ScopeList{}
-	err = l.List(ctx, scopes)
+	err = l.Get(ctx, client.ObjectKey{
+		Namespace: req.Namespace,
+		Name:      lease.Spec.Scope.Name,
+	}, &scope)
 	if err != nil {
-		l.l.Error(err, "failed to list scopes")
+		l.l.Error(err, "failed to get scope")
 		return ctrl.Result{}, err
 	}
 
 	// this approach probably leaks goroutines all over the place,
 	// since waiting ones are never cancelled/removed
-	for _, lease := range leases.Items {
-		scope := l.scopeForLease(scopes, lease)
-		if scope == nil {
-			continue
-		}
-
-		_, qs := l.queue[lease.UID]
-		if !qs {
-			go l.checkExpired(lease, scope)
-		}
-
-		dns, err := dns.GetDNSProviderForScope(*scope)
-		if err != nil {
-			l.l.Error(err, "failed to get DNS provider")
-		}
-		err = dns.CreateRecord(&lease)
-		if err == nil {
-			l.l.Info("added missing dns record")
-		} else {
-			l.l.Error(err, "failed to add dns record (this is probably fine)")
-		}
+	_, qs := l.queue[lease.UID]
+	if !qs {
+		go l.checkExpired(lease, scope)
 	}
 
+	dns, err := dns.GetDNSProviderForScope(scope)
+	if err != nil {
+		l.l.Error(err, "failed to get DNS provider")
+	}
+	err = dns.CreateRecord(&lease)
+	if err == nil {
+		l.l.Info("added missing dns record")
+	} else {
+		l.l.Error(err, "failed to add dns record (this is probably fine)")
+	}
 	return ctrl.Result{}, nil
 }
 
-func (l *LeaseReconciler) checkExpired(lease dhcpv1.Lease, scope *dhcpv1.Scope) {
+func (l *LeaseReconciler) checkExpired(lease dhcpv1.Lease, scope dhcpv1.Scope) {
 	l.queueMutex.Lock()
 	l.queue[lease.UID] = true
 	l.queueMutex.Unlock()
