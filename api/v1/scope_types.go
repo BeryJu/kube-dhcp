@@ -19,6 +19,7 @@ type ScopeSpec struct {
 
 	Default bool `json:"default"`
 
+	// +kubebuilder:validation:Optional
 	DNS   ScopeSpecDNS   `json:"dns"`
 	Range ScopeSpecRange `json:"range"`
 }

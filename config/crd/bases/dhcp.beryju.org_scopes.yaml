@@ -83,7 +83,6 @@ spec:
                 type: string
             required:
             - default
-            - dns
             - leaseTemplate
             - range
             - subnetCIDR
