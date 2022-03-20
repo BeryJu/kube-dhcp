@@ -16,5 +16,6 @@ spec:
   dns:
     provider: route53
     config:
-      zoneId: Z087207218FHE2I9LA6X8
+      zoneId: Z075720839VZLEYWCGF7B
+      reverseZoneId: Z07534501KETL314B9LHZ
       ttl: "3600"

@@ -1,5 +1,6 @@
 resources:
 - manager.yaml
+- svc.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

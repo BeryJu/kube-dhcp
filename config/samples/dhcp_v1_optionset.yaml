@@ -5,7 +5,11 @@ metadata:
 spec:
   options:
     - tagName: router
-      value: 10.120.22.1
+      value: 10.120.20.1
+    - tagName: name_server
+      value: 10.120.20.91
+    - tagName: domain_name
+      value: lab.beryju.org
     - tag: 43
       values64:
         # - 01040A78144A
