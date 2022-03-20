@@ -9,6 +9,7 @@ import (
 
 func getHostname(lease dhcpv1.Lease, domain string) string {
 	hostname := strings.ReplaceAll(lease.Spec.Hostname, domain, "")
+	hostname = strings.Split(hostname, ".")[0]
 	return fmt.Sprintf("%s.%s", hostname, domain)
 }
 
