@@ -30,7 +30,7 @@ func NewRoute53Provider(config map[string]string) (*Route53DNSProvider, error) {
 		p.zoneId = zone
 	}
 
-	if reverseZoneId, reverseZoneIdOk := config["reverseZoneIdId"]; reverseZoneIdOk {
+	if reverseZoneId, reverseZoneIdOk := config["reverseZoneId"]; reverseZoneIdOk {
 		p.reverseZoneId = reverseZoneId
 	}
 
