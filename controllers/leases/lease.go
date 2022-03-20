@@ -25,11 +25,21 @@ type LeaseReconciler struct {
 	queueMutex sync.Mutex
 }
 
+func (l *LeaseReconciler) scopeForLease(scopes *dhcpv1.ScopeList, lease dhcpv1.Lease) *dhcpv1.Scope {
+	for _, scope := range scopes.Items {
+		if scope.ObjectMeta.Name == lease.Spec.Scope.Name {
+			return &scope
+		}
+	}
+	return nil
+}
+
 //+kubebuilder:rbac:groups=dhcp.beryju.org,resources=leases,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=dhcp.beryju.org,resources=leases/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=dhcp.beryju.org,resources=leases/finalizers,verbs=update
 func (l *LeaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	l.l = ctrl.Log
+
 	l.l.V(1).Info("lease reconcile run")
 
 	leases := &dhcpv1.LeaseList{}
@@ -39,12 +49,30 @@ func (l *LeaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
+	scopes := &dhcpv1.ScopeList{}
+	err = l.List(ctx, scopes)
+	if err != nil {
+		l.l.Error(err, "failed to list scopes")
+		return ctrl.Result{}, err
+	}
+
 	// this approach probably leaks goroutines all over the place,
 	// since waiting ones are never cancelled/removed
 	for _, lease := range leases.Items {
 		_, qs := l.queue[lease.UID]
 		if !qs {
 			go l.checkExpired(lease)
+		}
+
+		scope := l.scopeForLease(scopes, lease)
+
+		dns, err := dns.GetDNSProviderForScope(*scope)
+		if err != nil {
+			l.l.Error(err, "failed to get DNS provider")
+		}
+		err = dns.CreateRecord(&lease)
+		if err == nil {
+			l.l.Info("added missing dns record")
 		}
 	}
 
