@@ -83,7 +83,7 @@ func (r *Route53DNSProvider) updateRecord(chg *route53.Change, zone string) erro
 }
 
 func (r *Route53DNSProvider) CreateRecord(lease *dhcpv1.Lease) error {
-	fwd := aws.String(lease.Spec.Hostname + "." + *r.z.HostedZone.Name)
+	fwd := aws.String(getHostname(*lease, *r.z.HostedZone.Name))
 	err := r.updateRecord(&route53.Change{
 		Action: aws.String(r53.ChangeActionUpsert),
 		ResourceRecordSet: &route53.ResourceRecordSet{
@@ -124,7 +124,7 @@ func (r *Route53DNSProvider) UpdateRecord(lease *dhcpv1.Lease) error {
 }
 
 func (r *Route53DNSProvider) DeleteRecord(lease *dhcpv1.Lease) error {
-	fwd := aws.String(lease.Spec.Hostname + "." + *r.z.HostedZone.Name)
+	fwd := aws.String(getHostname(*lease, *r.z.HostedZone.Name))
 	err := r.updateRecord(&route53.Change{
 		Action: aws.String(r53.ChangeActionDelete),
 		ResourceRecordSet: &route53.ResourceRecordSet{

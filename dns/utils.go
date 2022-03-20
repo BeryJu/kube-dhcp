@@ -3,7 +3,14 @@ package dns
 import (
 	"fmt"
 	"strings"
+
+	dhcpv1 "beryju.org/kube-dhcp/api/v1"
 )
+
+func getHostname(lease dhcpv1.Lease, domain string) string {
+	hostname := strings.ReplaceAll(lease.Spec.Hostname, domain, "")
+	return fmt.Sprintf("%s.%s", hostname, domain)
+}
 
 func reverseDNSRecord(ip string) string {
 	addressSlice := strings.Split(ip, ".")
