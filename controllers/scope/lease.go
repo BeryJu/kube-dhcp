@@ -51,7 +51,12 @@ func (r *ScopeReconciler) findLease(m *dhcpv4.DHCPv4) *dhcpv1.Lease {
 	var match *dhcpv1.Lease
 	for _, lease := range leases.Items {
 		if lease.Spec.Identifier == m.ClientHWAddr.String() {
-			r.l.V(1).Info("found matching lease", "lease", lease)
+			r.l.V(1).Info("found matching lease", "by", "mac", "lease", lease)
+			match = &lease
+			break
+		}
+		if lease.Spec.Identifier == m.ClassIdentifier() {
+			r.l.V(1).Info("found matching lease", "by", "cid", "lease", lease)
 			match = &lease
 			break
 		}

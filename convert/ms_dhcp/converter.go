@@ -138,6 +138,13 @@ func (c *Converter) convertScopeOptionValues(ks dhcpv1.Scope, val []OptionValue)
 	c.writeFile(&kos)
 }
 
+func (c *Converter) getIdentifier(clientId string) string {
+	if strings.Count(clientId, "-") == 5 {
+		return strings.ReplaceAll(clientId, "-", ":")
+	}
+	return strings.ReplaceAll(clientId, "-", "")
+}
+
 func (c *Converter) convertReservation(ks dhcpv1.Scope, r Reservation) {
 	name := slug.Make(fmt.Sprintf("%s-%s", ks.Name, r.Name))
 	lease := dhcpv1.Lease{
@@ -149,7 +156,7 @@ func (c *Converter) convertReservation(ks dhcpv1.Scope, r Reservation) {
 			APIVersion: "dhcp.beryju.org/v1",
 		},
 		Spec: dhcpv1.LeaseSpec{
-			Identifier: strings.ReplaceAll(r.ClientId, "-", ":"),
+			Identifier: c.getIdentifier(r.ClientId),
 			Hostname:   r.Name,
 			Address:    r.IPAddress,
 			Scope: corev1.LocalObjectReference{
@@ -177,7 +184,7 @@ func (c *Converter) convertLease(ks dhcpv1.Scope, l Lease) {
 			APIVersion: "dhcp.beryju.org/v1",
 		},
 		Spec: dhcpv1.LeaseSpec{
-			Identifier: strings.ReplaceAll(l.ClientId, "-", ":"),
+			Identifier: c.getIdentifier(l.ClientId),
 			Address:    l.IPAddress,
 			Hostname:   l.HostName,
 			Scope: corev1.LocalObjectReference{
