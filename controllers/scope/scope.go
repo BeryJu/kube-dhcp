@@ -92,6 +92,7 @@ func (r *ScopeReconciler) isIPFree(scope dhcpv1.Scope, ip netip.Addr) bool {
 			break
 		}
 	}
+	free = true
 	return free
 }
 
