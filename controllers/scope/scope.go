@@ -94,16 +94,19 @@ func (r *ScopeReconciler) nextFreeAddress(scope dhcpv1.Scope) *netip.Addr {
 		}
 		foundExisting := false
 		// Ip is less than the start of the range
-		if start.Compare(initialIp) == -1 {
+		if start.Compare(initialIp) == 1 {
+			r.l.V(1).Info("discarding because before start")
 			foundExisting = true
 		}
 		// Ip is more than the end of the range
-		if end.Compare(initialIp) == 1 {
+		if end.Compare(initialIp) == -1 {
+			r.l.V(1).Info("discarding because after end")
 			foundExisting = true
 		}
 		// check for existing leases
 		for _, l := range leases.Items {
 			if l.Spec.Address == initialIp.String() {
+				r.l.V(1).Info("discarding because existing lease")
 				foundExisting = true
 				break
 			}
