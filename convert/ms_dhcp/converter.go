@@ -89,6 +89,10 @@ func (c *Converter) convertScope(sc Scope) {
 		},
 		Spec: dhcpv1.ScopeSpec{
 			SubnetCIDR: cidr.String(),
+			Range: dhcpv1.ScopeSpecRange{
+				Start: sc.StartRange,
+				End:   sc.EndRange,
+			},
 			LeaseTemplate: &dhcpv1.LeaseCommonSpec{
 				OptionSet: corev1.LocalObjectReference{
 					Name: sc.Name,
