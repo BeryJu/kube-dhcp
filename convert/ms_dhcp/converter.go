@@ -89,6 +89,9 @@ func (c *Converter) convertScope(sc Scope) {
 		},
 		Spec: dhcpv1.ScopeSpec{
 			SubnetCIDR: cidr.String(),
+			DNS: dhcpv1.ScopeSpecDNS{
+				Config: map[string]string{},
+			},
 			Range: dhcpv1.ScopeSpecRange{
 				Start: sc.StartRange,
 				End:   sc.EndRange,
