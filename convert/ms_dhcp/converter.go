@@ -179,6 +179,7 @@ func (c *Converter) convertLease(ks dhcpv1.Scope, l Lease) {
 		Spec: dhcpv1.LeaseSpec{
 			Identifier: strings.ReplaceAll(l.ClientId, "-", ":"),
 			Address:    l.IPAddress,
+			Hostname:   l.HostName,
 			Scope: corev1.LocalObjectReference{
 				Name: ks.Name,
 			},
