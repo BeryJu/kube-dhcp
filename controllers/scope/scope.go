@@ -53,6 +53,48 @@ func (r *ScopeReconciler) matchScope(scope dhcpv1.Scope, conn net.PacketConn, pe
 	return false
 }
 
+func (r *ScopeReconciler) isIPFree(scope dhcpv1.Scope, ip netip.Addr) bool {
+	free := false
+
+	start, err := netip.ParseAddr(scope.Spec.Range.Start)
+	if err != nil {
+		r.l.Error(err, "failed to parse start")
+		return free
+	}
+	end, err := netip.ParseAddr(scope.Spec.Range.End)
+	if err != nil {
+		r.l.Error(err, "failed to parse end")
+		return free
+	}
+	// get all leases to check
+	leases := &dhcpv1.LeaseList{}
+	err = r.List(context.Background(), leases)
+	if err != nil {
+		r.l.Error(err, "failed to list leases")
+		return free
+	}
+
+	// Ip is less than the start of the range
+	if start.Compare(ip) == 1 {
+		r.l.V(1).Info("discarding because before start")
+		free = false
+	}
+	// Ip is more than the end of the range
+	if end.Compare(ip) == -1 {
+		r.l.V(1).Info("discarding because after end")
+		free = false
+	}
+	// check for existing leases
+	for _, l := range leases.Items {
+		if l.Spec.Address == ip.String() {
+			r.l.V(1).Info("discarding because existing lease")
+			free = false
+			break
+		}
+	}
+	return free
+}
+
 func (r *ScopeReconciler) nextFreeAddress(scope dhcpv1.Scope) *netip.Addr {
 	// Check cidrs
 	cidr, err := netip.ParsePrefix(scope.Spec.SubnetCIDR)
@@ -65,25 +107,6 @@ func (r *ScopeReconciler) nextFreeAddress(scope dhcpv1.Scope) *netip.Addr {
 		}
 		return nil
 	}
-	// get all leases to check
-	leases := &dhcpv1.LeaseList{}
-	err = r.List(context.Background(), leases)
-	if err != nil {
-		r.l.Error(err, "failed to list leases")
-		return nil
-	}
-
-	start, err := netip.ParseAddr(scope.Spec.Range.Start)
-	if err != nil {
-		r.l.Error(err, "failed to parse start")
-		return nil
-	}
-	end, err := netip.ParseAddr(scope.Spec.Range.End)
-	if err != nil {
-		r.l.Error(err, "failed to parse end")
-		return nil
-	}
-
 	initialIp := cidr.Addr()
 	for {
 		initialIp = initialIp.Next()
@@ -92,26 +115,7 @@ func (r *ScopeReconciler) nextFreeAddress(scope dhcpv1.Scope) *netip.Addr {
 		if !cidr.Contains(initialIp) {
 			return nil
 		}
-		foundExisting := false
-		// Ip is less than the start of the range
-		if start.Compare(initialIp) == 1 {
-			r.l.V(1).Info("discarding because before start")
-			foundExisting = true
-		}
-		// Ip is more than the end of the range
-		if end.Compare(initialIp) == -1 {
-			r.l.V(1).Info("discarding because after end")
-			foundExisting = true
-		}
-		// check for existing leases
-		for _, l := range leases.Items {
-			if l.Spec.Address == initialIp.String() {
-				r.l.V(1).Info("discarding because existing lease")
-				foundExisting = true
-				break
-			}
-		}
-		if !foundExisting {
+		if r.isIPFree(scope, initialIp) {
 			return &initialIp
 		}
 	}

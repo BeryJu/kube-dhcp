@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"net"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -29,6 +30,11 @@ func (r *ScopeReconciler) createLeaseFor(scope *dhcpv1.Scope, conn net.PacketCon
 	}
 	spec.Identifier = m.ClientHWAddr.String()
 	spec.Address = r.nextFreeAddress(*scope).String()
+	if requestIp, ok := netip.AddrFromSlice(m.Options.Get(dhcpv4.OptionRequestedIPAddress)); ok {
+		if r.isIPFree(*scope, requestIp) {
+			spec.Address = requestIp.String()
+		}
+	}
 	status := dhcpv1.LeaseStatus{
 		LastRequest: time.Now().Format(time.RFC3339),
 	}
@@ -47,7 +53,7 @@ func (r *ScopeReconciler) findLease(m *dhcpv4.DHCPv4) *dhcpv1.Lease {
 		r.l.Error(err, "failed to list leases")
 		return nil
 	}
-	cid := string(m.Options.Get(dhcpv4.OptionClientIdentifier))
+	cid := m.Options.Get(dhcpv4.OptionClientMachineIdentifier)
 	r.l.V(1).Info("cheking for existing lease", "mac", m.ClientHWAddr.String(), "cid", cid)
 	var match *dhcpv1.Lease
 	for _, lease := range leases.Items {
@@ -56,7 +62,7 @@ func (r *ScopeReconciler) findLease(m *dhcpv4.DHCPv4) *dhcpv1.Lease {
 			match = &lease
 			break
 		}
-		if lease.Spec.Identifier == cid {
+		if lease.Spec.Identifier == string(cid) {
 			r.l.V(1).Info("found matching lease", "by", "cid", "lease", lease)
 			match = &lease
 			break
