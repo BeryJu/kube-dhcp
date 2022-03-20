@@ -45,7 +45,6 @@ var rootCmd = &cobra.Command{
 			Development: true,
 		}
 		opts.BindFlags(flag.CommandLine)
-		flag.Parse()
 
 		ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
