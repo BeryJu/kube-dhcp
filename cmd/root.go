@@ -49,8 +49,7 @@ var rootCmd = &cobra.Command{
 		ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 		err := sentry.Init(sentry.ClientOptions{
-			// Either set environment and release here or set the SENTRY_ENVIRONMENT
-			// and SENTRY_RELEASE environment variables.
+			Dsn:         "https://110345c457714e22ba1d493f0a5dc639@sentry.beryju.org/16",
 			Environment: "development",
 			Release:     "kube-dhcp@0.0.0",
 		})
