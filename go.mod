@@ -3,7 +3,7 @@ module beryju.org/kube-dhcp
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go v1.44.0
+	github.com/aws/aws-sdk-go v1.44.1
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-logr/logr v1.2.3
 	github.com/gosimple/slug v1.12.0
